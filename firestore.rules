@@ -1,0 +1,155 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Validation for Story
+    function isValidStory(data) {
+      return data.keys().hasAll(['title', 'ownerId', 'type']) &&
+             data.title is string && data.title.size() <= 200 &&
+             data.ownerId == request.auth.uid &&
+             data.type in ['Novel', 'Script', 'Book', 'Short Story'];
+    }
+
+    match /stories/{storyId} {
+      allow create: if isSignedIn() && isValidId(storyId) && isValidStory(request.resource.data);
+      allow read, delete: if isOwner(resource.data.ownerId);
+      allow update: if isOwner(resource.data.ownerId) && isValidStory(request.resource.data);
+    }
+
+    // Validation for Character
+    function isValidCharacter(data) {
+      return data.keys().hasAll(['name', 'storyId', 'ownerId']) &&
+             data.name is string && data.name.size() <= 100 &&
+             data.storyId is string &&
+             data.ownerId == request.auth.uid &&
+             (!('age' in data) || data.age is string) &&
+             (!('backstory' in data) || data.backstory is string) &&
+             (!('personality' in data) || data.personality is string) &&
+             (!('physicalDescription' in data) || data.physicalDescription is string) &&
+             (!('relationships' in data) || data.relationships is string) &&
+             (!('traits' in data) || data.traits is list) &&
+             (!('arc' in data) || data.arc is string);
+    }
+
+    match /characters/{characterId} {
+      allow create: if isSignedIn() && isValidId(characterId) && isValidCharacter(request.resource.data);
+      allow read, delete: if isOwner(resource.data.ownerId);
+      allow update: if isOwner(resource.data.ownerId) && isValidCharacter(request.resource.data);
+    }
+
+    // Validation for Plot
+    function isValidPlot(data) {
+      return data.keys().hasAll(['title', 'storyId', 'ownerId', 'order']) &&
+             data.title is string && data.title.size() <= 200 &&
+             data.order is int &&
+             data.ownerId == request.auth.uid &&
+             (!('setting' in data) || data.setting is string) &&
+             (!('charactersInvolved' in data) || data.charactersInvolved is string) &&
+             (!('characterIds' in data) || data.characterIds is list) &&
+             (!('keyOutcomes' in data) || data.keyOutcomes is string);
+    }
+
+    match /plots/{plotId} {
+      allow create: if isSignedIn() && isValidId(plotId) && isValidPlot(request.resource.data);
+      allow read, delete: if isOwner(resource.data.ownerId);
+      allow update: if isOwner(resource.data.ownerId) && isValidPlot(request.resource.data);
+    }
+
+    // Validation for Timeline
+    function isValidTimeline(data) {
+      return data.keys().hasAll(['event', 'storyId', 'ownerId']) &&
+             data.event is string && data.event.size() <= 1000 &&
+             data.ownerId == request.auth.uid;
+    }
+
+    match /timelines/{timelineId} {
+      allow create: if isSignedIn() && isValidId(timelineId) && isValidTimeline(request.resource.data);
+      allow read, delete: if isOwner(resource.data.ownerId);
+      allow update: if isOwner(resource.data.ownerId) && isValidTimeline(request.resource.data);
+    }
+
+    // Validation for Relationship
+    function isValidRelationship(data) {
+      return data.keys().hasAll(['sourceId', 'targetId', 'type', 'storyId', 'ownerId']) &&
+             data.sourceId is string && data.targetId is string &&
+             data.type is string && data.type.size() <= 100 &&
+             data.storyId is string &&
+             data.ownerId == request.auth.uid &&
+             (!('strength' in data) || data.strength is int) &&
+             (!('notes' in data) || data.notes is string);
+    }
+
+    match /relationships/{relId} {
+      allow create: if isSignedIn() && isValidId(relId) && isValidRelationship(request.resource.data);
+      allow read, delete: if isOwner(resource.data.ownerId);
+      allow update: if isOwner(resource.data.ownerId) && isValidRelationship(request.resource.data);
+    }
+
+    // Validation for Lore
+    function isValidLore(data) {
+      return data.keys().hasAll(['title', 'content', 'type', 'storyId', 'ownerId']) &&
+             data.title is string && data.title.size() <= 200 &&
+             data.content is string &&
+             data.ownerId == request.auth.uid;
+    }
+
+    match /lores/{loreId} {
+      allow create: if isSignedIn() && isValidId(loreId) && isValidLore(request.resource.data);
+      allow read, delete: if isOwner(resource.data.ownerId);
+      allow update: if isOwner(resource.data.ownerId) && isValidLore(request.resource.data);
+    }
+
+    // Validation for Presence (Real-time collaboration)
+    function isValidPresence(data) {
+      return data.keys().hasAll(['uid', 'email', 'name', 'storyId', 'lastActive']) &&
+             data.uid == request.auth.uid &&
+             data.name is string && data.name.size() <= 100;
+    }
+
+    match /presence/{pId} {
+      allow create, update: if isSignedIn() && isValidPresence(request.resource.data);
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow read: if isSignedIn(); // Allow everyone to see who is active
+    }
+
+    // Snapshots / Version History
+    function isValidSnapshot(data) {
+      return data.keys().hasAll(['content', 'storyId', 'ownerId']) &&
+             data.ownerId == request.auth.uid;
+    }
+
+    match /snapshots/{snapId} {
+      allow create: if isSignedIn() && isValidId(snapId) && isValidSnapshot(request.resource.data);
+      allow read, delete: if isOwner(resource.data.ownerId);
+    }
+
+    // Validation for Profiles
+    function isValidProfile(data) {
+      return data.keys().hasAll(['uid', 'tier']) &&
+             data.uid == request.auth.uid &&
+             data.tier in ['Starter', 'Pro'];
+    }
+
+    match /profiles/{uid} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isValidProfile(request.resource.data);
+    }
+  }
+}

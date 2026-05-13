@@ -1,0 +1,157 @@
+{
+  "entities": {
+    "stories": {
+      "title": "Story",
+      "description": "A creative project like a novel, script, or book.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "published", "archived"] },
+        "content": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "ownerId", "type"]
+    },
+    "characters": {
+      "title": "Character",
+      "description": "A character belonging to a story.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "age": { "type": "string" },
+        "backstory": { "type": "string" },
+        "personality": { "type": "string" },
+        "physicalDescription": { "type": "string" },
+        "relationships": { "type": "string" },
+        "description": { "type": "string" },
+        "traits": { "type": "array" },
+        "arc": { "type": "string" },
+        "storyId": { "type": "string" },
+        "ownerId": { "type": "string" }
+      },
+      "required": ["name", "storyId", "ownerId"]
+    },
+    "plots": {
+      "title": "Plot Point",
+      "description": "An event or beat in the story plot.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "setting": { "type": "string" },
+        "charactersInvolved": { "type": "string" },
+        "characterIds": { "type": "array" },
+        "keyOutcomes": { "type": "string" },
+        "order": { "type": "integer" },
+        "storyId": { "type": "string" },
+        "ownerId": { "type": "string" }
+      },
+      "required": ["title", "storyId", "ownerId", "order"]
+    },
+    "timelines": {
+      "title": "Timeline Event",
+      "description": "A dated event in the story world.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "event": { "type": "string" },
+        "storyId": { "type": "string" },
+        "ownerId": { "type": "string" }
+      },
+      "required": ["event", "storyId", "ownerId"]
+    },
+    "relationships": {
+      "title": "Relationship",
+      "description": "A relationship between two characters.",
+      "type": "object",
+      "properties": {
+        "sourceId": { "type": "string" },
+        "targetId": { "type": "string" },
+        "type": { "type": "string" },
+        "strength": { "type": "integer" },
+        "notes": { "type": "string" },
+        "storyId": { "type": "string" },
+        "ownerId": { "type": "string" }
+      },
+      "required": ["sourceId", "targetId", "type", "storyId", "ownerId"]
+    },
+    "lores": {
+      "title": "Lore",
+      "description": "A lore entry, location, myth, or artifact.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "type": { "type": "string" },
+        "storyId": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "type", "storyId", "ownerId"]
+    },
+    "presence": {
+      "title": "Presence",
+      "description": "Real-time user presence in a story.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "storyId": { "type": "string" },
+        "lastActive": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "name", "storyId", "lastActive"]
+    },
+    "profiles": {
+      "title": "User Profile",
+      "description": "User account information and subscription tier.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "tier": { "type": "string", "enum": ["Starter", "Pro"] },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "tier"]
+    }
+  },
+  "firestore": {
+    "stories": {
+      "schema": "stories",
+      "description": "Root collection for all stories."
+    },
+    "characters": {
+      "schema": "characters",
+      "description": "Individual character profiles."
+    },
+    "plots": {
+      "schema": "plots",
+      "description": "Plot points for story organization."
+    },
+    "timelines": {
+      "schema": "timelines",
+      "description": "Timeline entries for chronological tracking."
+    },
+    "relationships": {
+      "schema": "relationships",
+      "description": "Character relationship mappings."
+    },
+    "lores": {
+      "schema": "lores",
+      "description": "Lore and world-building entries."
+    },
+    "presence": {
+      "schema": "presence",
+      "description": "Active users in a story for collaboration."
+    },
+    "profiles": {
+      "schema": "profiles",
+      "description": "User subscription data."
+    }
+  }
+}
